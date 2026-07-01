@@ -577,6 +577,163 @@ FROM `branch`;
 SELECT *
 FROM `works_with`;
 
+-- 查看表数据
+SHOW DATABASES;
+USE `sql_tutorial`;
+SHOW TABLES;
+SELECT * FROM `employee`;
 
+-- 创建索引（语法模板）
+-- CREATE [UNIQUE|FULLTEXT|SPATIAL] INDEX index_name
+--     ON tbl_name (index_col_name,...);
+
+-- 1. 创建 fast 表（有索引）
+CREATE TABLE `employee_fast` (
+    `emp_id` INT PRIMARY KEY,
+    `name` VARCHAR(20),
+    `birth_date` DATE,
+    `sex` VARCHAR(1),
+    `salary` INT,
+    `branch_id` INT,
+    `sup_id` INT
+);
+
+-- 2. 从 employee 复制数据
+INSERT INTO `employee_fast` SELECT * FROM `employee`;
+
+-- 3. 创建索引（让查询变快）
+-- CREATE INDEX name_index ON `employee_fast`(`name`);
+-- CREATE INDEX salary_index ON `employee_fast`(`salary`);
+-- CREATE INDEX birth_index ON `employee_fast`(`birth_date`);
+
+-- 4. 创建 slow 表（无索引）
+CREATE TABLE `employee_slow`(
+    `emp_id` INT PRIMARY KEY,
+    `name` VARCHAR(20),
+    `birth_date` DATE,
+    `sex` VARCHAR(1),
+    `salary` INT,
+    `branch_id` INT,
+    `sup_id` INT
+);
+
+-- 5. 从 employee 复制数据
+INSERT INTO `employee_slow` SELECT * FROM `employee`;
+
+-- 注意：slow 表没有加任何索引！
+
+-- 查看表结构
+DESC `employee_fast`;
+DESC `employee_slow`;
+SELECT * FROM `employee_fast`;
+
+-- 统计表记录数
+SELECT COUNT(*) FROM `employee_fast`;
+
+-- 创建索引
+CREATE INDEX `name_index` ON `employee_fast`(`name`);
+
+-- 查看索引
+SHOW INDEX FROM `employee_fast`;
+
+-- 查询（带索引，按邮箱前缀查询并按id排序）
+SELECT * FROM `employee_fast` WHERE `birth_date` LIKE '1%' ORDER BY `emp_id`;
+
+-- 对比查询（无索引时可能更慢）
+SELECT * FROM `employee_slow` WHERE `birth_date` LIKE '1%' ORDER BY `emp_id`;
+
+-- 删除索引
+DROP INDEX `name_index` ON `employee_fast`;
+
+-- 添加索引（另一种语法）
+ALTER TABLE `employee_fast` ADD INDEX `name_index` (`name`);
+
+
+
+/*
+"""
+================================================================
+MySQL 索引笔记（快速查询版）
+================================================================
+
+一、索引是什么？
+   索引 = 目录（让 MySQL 不用从头翻到尾，直接定位）
+
+   主键（PRIMARY KEY）自带索引，查主键快。
+   普通字段没有索引，按普通字段查会"全表扫描"。
+
+二、为什么要给普通字段加索引？
+   因为 WHERE 条件里不一定只查主键。
+
+   快查询（走索引）：
+   SELECT * FROM employee WHERE emp_id = 208;   -- 主键查，快
+
+   慢查询（全表扫描）：
+   SELECT * FROM employee WHERE name = '小黑';   -- 没索引，慢
+
+   解决：加索引
+   CREATE INDEX name_index ON employee(name);    -- 按名字查变快
+
+三、什么时候该加索引？
+   ✅ WHERE 条件里经常用的字段
+   ✅ 数据量大的表（几万条以上）
+   ✅ 经常用于 JOIN 的字段（外键）
+   ✅ 需要排序的字段（ORDER BY）
+
+   ❌ 很少查的字段
+   ❌ 区分度低的字段（如 sex，只有男/女）
+   ❌ 经常 INSERT / UPDATE 的表（索引会拖慢写入）
+
+四、加索引的意义
+   有索引：像查字典，直接翻到对应页 → 快
+   没索引：从第一页翻到最后一页 → 慢
+
+   数据量越大，索引优势越明显。
+
+五、索引类型
+   CREATE INDEX idx_name ON table(column);            -- 普通索引
+   CREATE UNIQUE INDEX idx_name ON table(column);    -- 唯一索引（不能重复）
+   CREATE INDEX idx_name ON table(col1, col2);       -- 组合索引
+   ALTER TABLE table ADD INDEX idx_name (column);    -- 另一种写法
+
+六、查看/删除索引
+   SHOW INDEX FROM table;          -- 查看表的索引
+   DROP INDEX idx_name ON table;   -- 删除索引
+
+七、执行计划（看有没有走索引）
+   EXPLAIN SELECT * FROM employee WHERE name = '小黑';
+   -- type=ALL → 全表扫描（没走索引）
+   -- type=ref → 用了索引（快）
+
+八、一句话总结
+   主键查自己快，但 WHERE 条件不只有主键。
+   经常查的字段就建索引，查得快。
+"""
+
+*/
  
+ 
+ -- 创建视图（前3）
+CREATE VIEW `top3`
+AS
+SELECT * FROM `works_with` 
+ORDER BY `total_sales` DESC 
+LIMIT 3;
+
+-- 查询视图
+SELECT * FROM `top3`;
+SELECT * FROM `works_with`;
+
+-- 更新数据（原表会变，视图也会变）
+UPDATE `works_with` 
+SET `total_sales` = 00879401
+WHERE `emp_id` = 210;
+
+-- 修改视图（改成最低等级前10）
+ALTER VIEW `top3`
+AS
+SELECT * FROM `works_with`           ORDER BY `total_sales`            LIMIT 3;
+
+-- 删除视图
+DROP VIEW `top3`;
  
