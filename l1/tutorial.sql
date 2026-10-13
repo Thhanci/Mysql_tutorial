@@ -6,6 +6,7 @@ CREATE DATABASE `database`;
 DROP DATABASE `database`;
 DROP DATABASE `sql_tutorial`;
 USE `sql_tutorial`;
+SELECT DATABASE();
 
 CREATE TABLE `student`(
 	`student_id` INT PRIMARY KEY,
@@ -40,7 +41,7 @@ INSERT INTO `student`(`major`,`student_id`) VALUES('英语',5);
 
 
 
-
+SHOW TABLES;
 DROP TABLE `student`;
 
 CREATE TABLE `student`(
